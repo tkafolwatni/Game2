@@ -1,3 +1,6 @@
+document.addEventListener("DOMContentLoaded", function () {
+  // ← باقي الكود هنا
+});
 let board = null;
 let game = new Chess();
 let moveHistory = [];
@@ -71,4 +74,4 @@ const config = {
     onDrop
 };
 
-board = Chessboard('board', config);
+board = Chessboard('board', config);}); // ← نهاية DOMContentLoaded
