@@ -1,33 +1,30 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>لعبة الشطرنج الملكي</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>اختبار رقعة شطرنج</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- مكتبة تصميم الشطرنج -->
   <link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    #board {
+      width: 90vw;
+      max-width: 350px;
+      margin: 30px auto;
+    }
+  </style>
 </head>
 <body>
-  <h1>لعبة الشطرنج الملكي</h1>
+  <h1>اختبار الرقعة فقط</h1>
+  <div id="board"></div>
 
-  <!-- لوحة الشطرنج -->
-  <div id="board" style="width: 90vw; max-width: 350px; margin: auto;"></div>
-
-  <!-- الغرفة السرية -->
-  <div id="secret-room" class="hidden">
-    <h2>🛡️ غرفة حزب التكافل الوطني السوري</h2>
-    <p id="role-display"></p>
-    <div class="message">🔒 سيتم حذف الرسالة بعد 5 ثوانٍ</div>
-    <input type="text" placeholder="اكتب رسالة..." id="secret-input">
-  </div>
-
-  <!-- مكتبات الذكاء الاصطناعي والشطرنج -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
   <script src="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-
-  <!-- سكربت اللعبة -->
-  <script src="script.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      Chessboard('board', {
+        position: 'start'
+      });
+    });
+  </script>
 </body>
 </html>
