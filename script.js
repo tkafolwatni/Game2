@@ -1,78 +1,83 @@
 document.addEventListener("DOMContentLoaded", function () {
-    let board = null;
-    let game = new Chess();
-    let moveHistory = [];
+  let board = null;
+  let game = new Chess();
+  let moveHistory = [];
 
-    function onDragStart(source, piece, position, orientation) {
-        if (game.game_over() || piece.search(/^b/) !== -1) {
-            return false;
-        }
+  function onDragStart(source, piece, position, orientation) {
+    if (game.game_over() || piece.startsWith("b")) return false;
+  }
+
+  function onDrop(source, target) {
+    const move = game.move({
+      from: source,
+      to: target,
+      promotion: "q",
+    });
+
+    if (move === null) return "snapback";
+
+    moveHistory.push(move.san);
+    checkSecretPatterns();
+
+    setTimeout(makeAIMove, 300);
+  }
+
+  function makeAIMove() {
+    if (game.game_over() || game.in_draw()) return;
+
+    const moves = game.moves();
+    const randomMove = moves[Math.floor(Math.random() * moves.length)];
+    game.move(randomMove);
+    board.position(game.fen());
+  }
+
+  function checkSecretPatterns() {
+    const last3 = moveHistory.slice(-3).join(" ");
+
+    // نمط المنسق
+    if (last3 === "Kd2 Kd3 Bc4") {
+      openSecretRoom("المنسق");
     }
-
-    function onDrop(source, target) {
-        const move = game.move({
-            from: source,
-            to: target,
-            promotion: 'q'
-        });
-
-        if (move === null) return 'snapback';
-
-        moveHistory.push(move.san);
-        checkSecretPatterns();
-
-        setTimeout(makeAIMove, 300);
+    // نمط المساعد
+    else if (last3.includes("g3") && last3.includes("Nf3")) {
+      openSecretRoom("المساعد");
     }
-
-    function makeAIMove() {
-        const possibleMoves = game.moves();
-        if (game.game_over() || game.in_draw()) return;
-
-        const randomIdx = Math.floor(Math.random() * possibleMoves.length);
-        game.move(possibleMoves[randomIdx]);
-        board.position(game.fen());
+    // نمط المتابع: تحريك 3 قطع مختلفة
+    else if (
+      moveHistory.length >= 3 &&
+      new Set(moveHistory.slice(-3).map((m) => m[0])).size === 3
+    ) {
+      openSecretRoom("المتابع");
     }
+  }
 
-    function checkSecretPatterns() {
-        const lastMoves = moveHistory.slice(-3).join(" ");
+  function openSecretRoom(role) {
+    const room = document.getElementById("secret-room");
+    room.style.display = "block";
+    document.getElementById("role-display").textContent = `وصفك: ${role}`;
 
-        if (lastMoves === "Kd2 Kd3 Bc4") {
-            openSecretRoom("المنسق");
-        } else if (lastMoves.includes("g3 Nf3")) {
-            openSecretRoom("المساعد");
-        } else if (
-            moveHistory.length >= 3 &&
-            new Set(moveHistory.slice(-3).map(m => m[0])).size === 3
-        ) {
-            openSecretRoom("المتابع");
-        }
-    }
+    setTimeout(() => {
+      document.querySelector(".message").textContent = "🚫 تم حذف الرسالة!";
+    }, 5000);
 
-    function openSecretRoom(role) {
-        const secretRoom = document.getElementById("secret-room");
-        secretRoom.style.display = "block";
+    const input = document.getElementById("secret-input");
+    input.addEventListener("input", () => {
+      if (input.value === "ككك") {
+        document.getElementById("board").innerHTML = "";
+        room.innerHTML = "<h2>🔥 تم تدمير المحتوى!</h2>";
+      }
+    });
+  }
 
-        document.getElementById("role-display").innerText = `وصفك: ${role}`;
+  const config = {
+    draggable: true,
+    position: "start",
+    onDragStart,
+    onDrop,
+  };
 
-        setTimeout(() => {
-            document.querySelector(".message").textContent = "🚫 تم حذف الرسالة!";
-        }, 5000);
-
-        const input = document.getElementById("secret-input");
-        input.addEventListener("input", () => {
-            if (input.value === "ككك") {
-                document.getElementById("board").innerHTML = "";
-                secretRoom.innerHTML = "<h2>🔥 تم تدمير المحتوى!</h2>";
-            }
-        });
-    }
-
-    const config = {
-        draggable: true,
-        position: 'start',
-        onDragStart,
-        onDrop
-    };
-
-    board = Chessboard('board', config);
+  board = Chessboard("board", config);
+  document.getElementById("board").style.height = "320px";
+  document.getElementById("board").style.width = "320px";
+  board.resize();
 });
