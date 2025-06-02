@@ -2,29 +2,28 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>اختبار رقعة شطرنج</title>
+  <title>لعبة الشطرنج الملكي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
-  <style>
-    #board {
-      width: 90vw;
-      max-width: 350px;
-      margin: 30px auto;
-    }
-  </style>
+  <!-- ملفات CSS -->
+  <link rel="stylesheet" href="libs/chessboard.css">
+  <link rel="stylesheet" href="pieces.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>اختبار الرقعة فقط</h1>
+  <h1>لعبة الشطرنج الملكي</h1>
+
   <div id="board"></div>
 
-  <script src="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      Chessboard('board', {
-        position: 'start'
-      });
-    });
-  </script>
+  <div id="secret-room" class="hidden">
+    <h2>🛡️ غرفة حزب التكافل الوطني السوري</h2>
+    <p id="role-display"></p>
+    <div class="message">🔒 سيتم حذف الرسالة بعد 5 ثوانٍ</div>
+    <input type="text" placeholder="اكتب رسالة..." id="secret-input">
+  </div>
+
+  <!-- ملفات JS -->
+  <script src="libs/chessboard.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
