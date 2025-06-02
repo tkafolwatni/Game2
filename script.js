@@ -1,118 +1,74 @@
-const board = document.getElementById("board");
-const secretRoom = document.getElementById("secret-room");
-const roleDisplay = document.getElementById("role-display");
-
+let board = null;
+let game = new Chess();
 let moveHistory = [];
-let selectedPiece = null;
-let moveCount = 0;
-let pieceMoveMap = {};
 
-function drawBoard() {
-    for (let row = 0; row < 8; row++) {
-        for (let col = 0; col < 8; col++) {
-            const square = document.createElement("div");
-            square.classList.add("square");
-            const isDark = (row + col) % 2 !== 0;
-            square.classList.add(isDark ? "dark" : "light");
-            square.dataset.position = `${row}-${col}`;
-            if (isDark && row < 3) addPiece(square, "white");
-            if (isDark && row > 4) addPiece(square, "green");
-            square.addEventListener("click", () => handleClick(square));
-            board.appendChild(square);
-        }
+function onDragStart(source, piece, position, orientation) {
+    if (game.game_over() || piece.search(/^b/) !== -1) {
+        return false;
     }
 }
 
-function addPiece(square, color) {
-    const piece = document.createElement("div");
-    piece.classList.add("piece", color);
-    square.appendChild(piece);
+function onDrop(source, target) {
+    const move = game.move({
+        from: source,
+        to: target,
+        promotion: 'q'
+    });
+
+    if (move === null) return 'snapback';
+
+    moveHistory.push(move.san);
+    checkSecretPatterns();
+
+    setTimeout(makeAIMove, 300);
 }
 
-function handleClick(square) {
-    const piece = square.querySelector(".piece");
-    const pos = square.dataset.position;
+function makeAIMove() {
+    const possibleMoves = game.moves();
+    if (game.game_over() || game.in_draw()) return;
 
-    if (piece && piece.classList.contains("green")) {
-        selectedPiece = square;
-    } else if (selectedPiece && !piece) {
-        const from = selectedPiece.dataset.position;
-        const to = square.dataset.position;
-        square.appendChild(selectedPiece.querySelector(".piece"));
-        selectedPiece = null;
-
-        moveHistory.push({ from, to });
-        updateMoveTracking(from);
-        moveCount++;
-
-        checkPatterns();
-    }
+    const randomIdx = Math.floor(Math.random() * possibleMoves.length);
+    game.move(possibleMoves[randomIdx]);
+    board.position(game.fen());
 }
 
-function updateMoveTracking(from) {
-    if (!pieceMoveMap[from]) pieceMoveMap[from] = 0;
-    pieceMoveMap[from]++;
-}
+function checkSecretPatterns() {
+    const lastMoves = moveHistory.slice(-3).join(" ");
 
-function checkPatterns() {
-    const pieceKeys = Object.keys(pieceMoveMap);
-    const moves = Object.values(pieceMoveMap);
-
-    // المشرف: قطعة واحدة تحركت للأمام ثلاث مرات
-    if (pieceKeys.length === 1 && moves[0] === 3) {
-        showSecretRoom("المنسق");
-    }
-
-    // المساعد: قطعتان متلاصقتان تتحركان كل دور
-    if (
-        pieceKeys.length === 2 &&
-        Math.abs(getRow(pieceKeys[0]) - getRow(pieceKeys[1])) <= 1 &&
-        Math.abs(getCol(pieceKeys[0]) - getCol(pieceKeys[1])) <= 1 &&
-        moves[0] >= 2 &&
-        moves[1] >= 2
+    if (lastMoves === "Kd2 Kd3 Bc4") {
+        openSecretRoom("المنسق");
+    } else if (lastMoves.includes("g3 Nf3")) {
+        openSecretRoom("المساعد");
+    } else if (
+        moveHistory.length >= 3 &&
+        new Set(moveHistory.slice(-3).map(m => m[0])).size === 3
     ) {
-        showSecretRoom("المساعد");
-    }
-
-    // المتابع: تحريك حجرين مختلفين خلال 3 أدوار دون تحريك غيرهما
-    if (
-        moveCount === 3 &&
-        pieceKeys.length === 2 &&
-        moves[0] === 1 &&
-        moves[1] === 1
-    ) {
-        showSecretRoom("المتابع");
+        openSecretRoom("المتابع");
     }
 }
 
-function getRow(pos) {
-    return parseInt(pos.split("-")[0]);
-}
+function openSecretRoom(role) {
+    document.getElementById("secret-room").style.display = "block";
+    document.getElementById("role-display").innerText = `وصفك: ${role}`;
 
-function getCol(pos) {
-    return parseInt(pos.split("-")[1]);
-}
-
-function showSecretRoom(role) {
-    secretRoom.classList.remove("hidden");
-    roleDisplay.textContent = `وصفك: ${role}`;
     setTimeout(() => {
         document.querySelector(".message").textContent = "🚫 تم حذف الرسالة!";
     }, 5000);
 
-    // مربع إدخال للتدمير الذاتي
-    const input = document.createElement("input");
-    input.type = "text";
-    input.placeholder = "اكتب رسالة...";
-    input.style.marginTop = "15px";
-    secretRoom.appendChild(input);
-
+    const input = document.getElementById("secret-input");
     input.addEventListener("input", () => {
         if (input.value === "ككك") {
-            board.innerHTML = "";
-            secretRoom.innerHTML = "<h2>🔥 تم تدمير المحتوى!</h2>";
+            document.getElementById("board").innerHTML = "";
+            document.getElementById("secret-room").innerHTML = "<h2>🔥 تم تدمير المحتوى!</h2>";
         }
     });
 }
 
-drawBoard();
+const config = {
+    draggable: true,
+    position: 'start',
+    onDragStart,
+    onDrop
+};
+
+board = Chessboard('board', config);
