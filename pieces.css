@@ -1,0 +1,27 @@
+/* تصميم القطع باستخدام Unicode بدلاً من صور */
+
+.piece-417db {
+  font-size: 30px;
+  text-align: center;
+  line-height: 100%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* رموز الشطرنج */
+.wK::after { content: "♔"; color: black; }
+.wQ::after { content: "♕"; color: black; }
+.wR::after { content: "♖"; color: black; }
+.wB::after { content: "♗"; color: black; }
+.wN::after { content: "♘"; color: black; }
+.wP::after { content: "♙"; color: black; }
+
+.bK::after { content: "♚"; color: white; }
+.bQ::after { content: "♛"; color: white; }
+.bR::after { content: "♜"; color: white; }
+.bB::after { content: "♝"; color: white; }
+.bN::after { content: "♞"; color: white; }
+.bP::after { content: "♟"; color: white; }
