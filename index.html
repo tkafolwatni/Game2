@@ -1,63 +1,64 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>الشطرنج الملكي ضد AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #f1f1f1;
       text-align: center;
-      padding: 0;
       margin: 0;
+      padding: 0;
     }
+
     h1 {
       margin: 20px;
     }
+
     #board {
       display: grid;
-      grid-template-columns: repeat(8, 40px);
-      grid-template-rows: repeat(8, 40px);
+      grid-template-columns: repeat(8, 1fr);
       width: 320px;
       height: 320px;
       margin: auto;
-      border: 2px solid #444;
+      border: 2px solid #333;
     }
+
     .square {
-      width: 40px;
+      width: 100%;
       height: 40px;
+      font-size: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
-      cursor: pointer;
     }
+
     .light {
       background-color: #f0d9b5;
     }
+
     .dark {
       background-color: #b58863;
     }
+
     .selected {
       outline: 2px solid red;
     }
   </style>
 </head>
 <body>
-  <h1>الشطرنج الملكي ضد الذكاء الاصطناعي</h1>
+  <h1>الشطرنج الملكي ضد AI</h1>
   <div id="board"></div>
 
   <script>
-    const boardElement = document.getElementById("board");
-
-    // رموز القطع
+    const boardEl = document.getElementById("board");
     const PIECES = {
       wP: "♙", wR: "♖", wN: "♘", wB: "♗", wQ: "♕", wK: "♔",
       bP: "♟", bR: "♜", bN: "♞", bB: "♝", bQ: "♛", bK: "♚"
     };
 
-    // مصفوفة تمثل الوضع الحالي
     let board = [
       ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
       ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
@@ -66,4 +67,78 @@
       ["", "", "", "", "", "", "", ""],
       ["", "", "", "", "", "", "", ""],
       ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
-      ["wR", "w
+      ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
+    ];
+
+    let selected = null;
+
+    function drawBoard() {
+      boardEl.innerHTML = "";
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+          const square = document.createElement("div");
+          square.className = "square " + ((row + col) % 2 === 0 ? "light" : "dark");
+          square.dataset.row = row;
+          square.dataset.col = col;
+          if (board[row][col]) {
+            square.textContent = PIECES[board[row][col]];
+          }
+          square.onclick = () => handleClick(row, col, square);
+          boardEl.appendChild(square);
+        }
+      }
+    }
+
+    function handleClick(row, col, square) {
+      const piece = board[row][col];
+      if (selected) {
+        const [fromRow, fromCol] = selected;
+        const movingPiece = board[fromRow][fromCol];
+
+        if (movingPiece.startsWith("w")) {
+          board[row][col] = movingPiece;
+          board[fromRow][fromCol] = "";
+          selected = null;
+          drawBoard();
+          setTimeout(aiMove, 300);
+        }
+      } else if (piece && piece.startsWith("w")) {
+        selected = [row, col];
+        drawBoard();
+        square.classList.add("selected");
+      }
+    }
+
+    function aiMove() {
+      const moves = [];
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const piece = board[r][c];
+          if (piece && piece.startsWith("b")) {
+            const directions = [[1, 0], [1, 1], [1, -1]];
+            for (let [dr, dc] of directions) {
+              const nr = r + dr;
+              const nc = c + dc;
+              if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                const target = board[nr][nc];
+                if (!target || target.startsWith("w")) {
+                  moves.push({ from: [r, c], to: [nr, nc] });
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (moves.length === 0) return;
+      const move = moves[Math.floor(Math.random() * moves.length)];
+      board[move.to[0]][move.to[1]] = board[move.from[0]][move.from[1]];
+      board[move.from[0]][move.from[1]] = "";
+      drawBoard();
+    }
+
+    drawBoard();
+  </script>
+</body>
+</html>
