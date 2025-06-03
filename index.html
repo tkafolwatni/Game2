@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>الشطرنج الملكي ضد AI</title>
+  <meta charset="UTF-8" />
+  <title>شطرنج واقعي ضد AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -47,42 +47,39 @@
       outline: 2px solid red;
     }
   </style>
+  <!-- مكتبة قوانين الشطرنج -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
 </head>
 <body>
-  <h1>الشطرنج الملكي ضد AI</h1>
+  <h1>الشطرنج الملكي ضد AI (واقعي)</h1>
   <div id="board"></div>
 
   <script>
-    const boardEl = document.getElementById("board");
     const PIECES = {
-      wP: "♙", wR: "♖", wN: "♘", wB: "♗", wQ: "♕", wK: "♔",
-      bP: "♟", bR: "♜", bN: "♞", bB: "♝", bQ: "♛", bK: "♚"
+      p: "♙", r: "♖", n: "♘", b: "♗", q: "♕", k: "♔",
+      P: "♟", R: "♜", N: "♞", B: "♝", Q: "♛", K: "♚"
     };
 
-    let board = [
-      ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
-      ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
-      ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
-    ];
-
-    let selected = null;
+    const boardEl = document.getElementById("board");
+    const game = new Chess();
+    let selectedSquare = null;
 
     function drawBoard() {
       boardEl.innerHTML = "";
-      for (let row = 0; row < 8; row++) {
+      const position = game.board();
+      for (let row = 7; row >= 0; row--) {
         for (let col = 0; col < 8; col++) {
           const square = document.createElement("div");
-          square.className = "square " + ((row + col) % 2 === 0 ? "light" : "dark");
+          const isDark = (row + col) % 2 === 0;
+          square.className = "square " + (isDark ? "dark" : "light");
           square.dataset.row = row;
           square.dataset.col = col;
-          if (board[row][col]) {
-            square.textContent = PIECES[board[row][col]];
+
+          const piece = position[row][col];
+          if (piece) {
+            square.textContent = PIECES[piece.color === "w" ? piece.type : piece.type.toUpperCase()];
           }
+
           square.onclick = () => handleClick(row, col, square);
           boardEl.appendChild(square);
         }
@@ -90,63 +87,33 @@
     }
 
     function handleClick(row, col, square) {
-      const piece = board[row][col];
+      const squareStr = "abcdefgh"[col] + (row + 1);
+      const piece = game.get(squareStr);
 
-      if (selected) {
-        const [fromRow, fromCol] = selected;
-        const selectedPiece = board[fromRow][fromCol];
+      if (selectedSquare) {
+        const move = game.move({ from: selectedSquare, to: squareStr, promotion: "q" });
 
-        // لا تنقل لنفس المربع
-        if (fromRow === row && fromCol === col) {
-          selected = null;
+        if (move) {
+          selectedSquare = null;
           drawBoard();
-          return;
-        }
-
-        // تحرك فقط إذا المربع فارغ أو فيه قطعة سوداء
-        if (selectedPiece.startsWith("w") && (!piece || piece.startsWith("b"))) {
-          board[row][col] = selectedPiece;
-          board[fromRow][fromCol] = "";
-          selected = null;
-          drawBoard();
-          setTimeout(aiMove, 300);
+          setTimeout(aiMove, 400);
         } else {
-          selected = null;
+          selectedSquare = null;
           drawBoard();
         }
-      } else if (piece && piece.startsWith("w")) {
-        selected = [row, col];
+      } else if (piece && piece.color === "w") {
+        selectedSquare = squareStr;
         drawBoard();
         square.classList.add("selected");
       }
     }
 
     function aiMove() {
-      const moves = [];
+      if (game.game_over()) return;
 
-      for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-          const piece = board[r][c];
-          if (piece && piece.startsWith("b")) {
-            const directions = [[1, 0], [1, 1], [1, -1]];
-            for (let [dr, dc] of directions) {
-              const nr = r + dr;
-              const nc = c + dc;
-              if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
-                const target = board[nr][nc];
-                if (!target || target.startsWith("w")) {
-                  moves.push({ from: [r, c], to: [nr, nc] });
-                }
-              }
-            }
-          }
-        }
-      }
-
-      if (moves.length === 0) return;
+      const moves = game.moves();
       const move = moves[Math.floor(Math.random() * moves.length)];
-      board[move.to[0]][move.to[1]] = board[move.from[0]][move.from[1]];
-      board[move.from[0]][move.from[1]] = "";
+      game.move(move);
       drawBoard();
     }
 
