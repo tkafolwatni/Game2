@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>شطرنج ملكي واقعي ضد AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الشطرنج الملكي الواقعي ضد AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,9 +12,11 @@
       margin: 0;
       padding: 0;
     }
+
     h1 {
       margin: 20px;
     }
+
     #board {
       display: grid;
       grid-template-columns: repeat(8, 1fr);
@@ -23,6 +25,7 @@
       margin: auto;
       border: 2px solid #333;
     }
+
     .square {
       width: 100%;
       height: 40px;
@@ -31,110 +34,52 @@
       align-items: center;
       justify-content: center;
     }
-    .light { background-color: #f0d9b5; }
-    .dark { background-color: #b58863; }
-    .selected { outline: 2px solid red; }
+
+    .light {
+      background-color: #f0d9b5;
+    }
+
+    .dark {
+      background-color: #b58863;
+    }
+
+    .selected {
+      outline: 2px solid red;
+    }
   </style>
+
+  <!-- تحميل مكتبة chess.js محليًا -->
+  <script src="chess.js"></script>
 </head>
 <body>
-  <h1>الشطرنج الملكي (قوانين حقيقية)</h1>
+  <h1>الشطرنج الملكي ضد AI</h1>
   <div id="board"></div>
 
   <script>
-    // نسخة مصغرة من chess.js (مستخرجة يدويًا، تعمل بدون إنترنت)
-    const Chess = function () {
-      let board = [
-        ["r", "n", "b", "q", "k", "b", "n", "r"],
-        ["p", "p", "p", "p", "p", "p", "p", "p"],
-        ["", "", "", "", "", "", "", ""],
-        ["", "", "", "", "", "", "", ""],
-        ["", "", "", "", "", "", "", ""],
-        ["", "", "", "", "", "", "", ""],
-        ["P", "P", "P", "P", "P", "P", "P", "P"],
-        ["R", "N", "B", "Q", "K", "B", "N", "R"]
-      ];
-      let turn = "w";
-
-      function getFen() {
-        return board.map(row => row.map(p => p || "1").join("")).join("/");
-      }
-
-      function getSquare(row, col) {
-        const piece = board[row][col];
-        if (!piece) return null;
-        const color = piece === piece.toUpperCase() ? "w" : "b";
-        const type = piece.toLowerCase();
-        return { type, color };
-      }
-
-      function move(from, to) {
-        const [fr, fc] = from;
-        const [tr, tc] = to;
-        const piece = board[fr][fc];
-        if (!piece) return false;
-        if ((turn === "w" && piece === piece.toLowerCase()) ||
-            (turn === "b" && piece === piece.toUpperCase())) return false;
-        // تبسيط: فقط حركة عمودية للأمام
-        if (piece.toLowerCase() === "p" && fc === tc && board[tr][tc] === "") {
-          const dir = piece === "P" ? -1 : 1;
-          if (tr === fr + dir) {
-            board[tr][tc] = piece;
-            board[fr][fc] = "";
-            turn = turn === "w" ? "b" : "w";
-            return true;
-          }
-        }
-        return false;
-      }
-
-      function legalMoves() {
-        const moves = [];
-        for (let r = 0; r < 8; r++) {
-          for (let c = 0; c < 8; c++) {
-            const p = board[r][c];
-            if (!p) continue;
-            if ((turn === "w" && p === p.toUpperCase()) ||
-                (turn === "b" && p === p.toLowerCase())) {
-              const dir = p === "P" ? -1 : 1;
-              const nr = r + dir;
-              if (nr >= 0 && nr < 8 && board[nr][c] === "") {
-                moves.push({ from: [r, c], to: [nr, c] });
-              }
-            }
-          }
-        }
-        return moves;
-      }
-
-      return {
-        getSquare,
-        move,
-        legalMoves,
-        turn: () => turn,
-        board: () => board
-      };
-    }();
-
     const PIECES = {
       p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚",
       P: "♙", R: "♖", N: "♘", B: "♗", Q: "♕", K: "♔"
     };
 
     const boardEl = document.getElementById("board");
-    let selected = null;
+    const game = new Chess();
+    let selectedSquare = null;
 
     function drawBoard() {
       boardEl.innerHTML = "";
-      const b = Chess.board();
-      for (let row = 0; row < 8; row++) {
+      const position = game.board();
+      for (let row = 7; row >= 0; row--) {
         for (let col = 0; col < 8; col++) {
           const square = document.createElement("div");
-          square.className = "square " + ((row + col) % 2 === 0 ? "dark" : "light");
+          const isDark = (row + col) % 2 === 0;
+          square.className = "square " + (isDark ? "dark" : "light");
           square.dataset.row = row;
           square.dataset.col = col;
 
-          const piece = b[row][col];
-          if (piece) square.textContent = PIECES[piece];
+          const piece = position[row][col];
+          if (piece) {
+            square.textContent = PIECES[piece.color === "w" ? piece.type : piece.type.toUpperCase()];
+          }
 
           square.onclick = () => handleClick(row, col, square);
           boardEl.appendChild(square);
@@ -143,27 +88,33 @@
     }
 
     function handleClick(row, col, square) {
-      if (selected) {
-        const [fromRow, fromCol] = selected;
-        const success = Chess.move([fromRow, fromCol], [row, col]);
-        selected = null;
-        drawBoard();
-        if (success) setTimeout(aiMove, 500);
-      } else {
-        const piece = Chess.getSquare(row, col);
-        if (piece && piece.color === Chess.turn()) {
-          selected = [row, col];
+      const squareStr = "abcdefgh"[col] + (row + 1);
+      const piece = game.get(squareStr);
+
+      if (selectedSquare) {
+        const move = game.move({ from: selectedSquare, to: squareStr, promotion: "q" });
+
+        if (move) {
+          selectedSquare = null;
           drawBoard();
-          square.classList.add("selected");
+          setTimeout(aiMove, 400);
+        } else {
+          selectedSquare = null;
+          drawBoard();
         }
+      } else if (piece && piece.color === "w" && game.turn() === "w") {
+        selectedSquare = squareStr;
+        drawBoard();
+        square.classList.add("selected");
       }
     }
 
     function aiMove() {
-      const moves = Chess.legalMoves();
-      if (moves.length === 0) return;
+      if (game.game_over()) return;
+
+      const moves = game.moves();
       const move = moves[Math.floor(Math.random() * moves.length)];
-      Chess.move(move.from, move.to);
+      game.move(move);
       drawBoard();
     }
 
