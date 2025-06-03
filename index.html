@@ -91,16 +91,28 @@
 
     function handleClick(row, col, square) {
       const piece = board[row][col];
+
       if (selected) {
         const [fromRow, fromCol] = selected;
-        const movingPiece = board[fromRow][fromCol];
+        const selectedPiece = board[fromRow][fromCol];
 
-        if (movingPiece.startsWith("w")) {
-          board[row][col] = movingPiece;
+        // لا تنقل لنفس المربع
+        if (fromRow === row && fromCol === col) {
+          selected = null;
+          drawBoard();
+          return;
+        }
+
+        // تحرك فقط إذا المربع فارغ أو فيه قطعة سوداء
+        if (selectedPiece.startsWith("w") && (!piece || piece.startsWith("b"))) {
+          board[row][col] = selectedPiece;
           board[fromRow][fromCol] = "";
           selected = null;
           drawBoard();
           setTimeout(aiMove, 300);
+        } else {
+          selected = null;
+          drawBoard();
         }
       } else if (piece && piece.startsWith("w")) {
         selected = [row, col];
